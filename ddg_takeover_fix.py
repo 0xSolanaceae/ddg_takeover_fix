@@ -14,19 +14,28 @@ def main():
     browser_selection = input("Select your browser (chromium/edge supported): ").lower()
     if browser_selection == 'chromium':
         chromium_selection = input("Enter your browser (chrome/thorium/vivaldi): ").lower()
+        base_path = f"C:/Users/{user}/AppData/Local"
         if chromium_selection == 'chrome':
-            manifest_path = f"C:/Users/{user}/AppData/Local/Google Chrome/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg/2024.4.26_0/manifest.json"
+            base_path += "/Google Chrome/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg"
         elif chromium_selection == 'thorium':
-            manifest_path = f"C:/Users/{user}/AppData/Local/Thorium/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg/2024.4.26_0/manifest.json"
+            base_path += "/Thorium/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg"
         elif chromium_selection == 'vivaldi':
-            manifest_path = f"C:/Users/{user}/AppData/Local/Vivaldi/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg/2024.4.26_0/manifest.json"
+            base_path += "/Vivaldi/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg"
         else:
             print("ERROR: Invalid chromium selection.")
             return
     elif browser_selection == 'edge':
-        manifest_path = f"C:/Users/{user}/AppData/Local/Microsoft Edge/User Data/Default/Extensions/caoacbimdbbljakfhgikoodekdnlcgpk/2024.4.26_0/manifest.json"
+        base_path = f"C:/Users/{user}/AppData/Local/Microsoft Edge/User Data/Default/Extensions/caoacbimdbbljakfhgikoodekdnlcgpk"
     else:
         print("ERROR: Invalid browser selection.")
+        return
+
+    try:
+        subfolder = os.listdir(base_path)[0]
+        manifest_path = os.path.join(base_path, subfolder, 'manifest.json')
+    except (FileNotFoundError, IndexError) as e:
+        print("ERROR: Subfolder not found or no subfolder exists.\n")
+        print(e)
         return
 
     if not os.path.exists(manifest_path):
