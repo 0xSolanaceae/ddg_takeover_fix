@@ -1,64 +1,53 @@
-#!/usr/bin/env python3
 import os
 import json
-import platform
+import logging
 
-def main():
-    if platform.system() != "Windows":
-        print("ERROR: This script is only supported on Windows.")
-        return
-    
-    user = os.getlogin()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    print("If your browser is chromium based, like Google Chrome, Thorium, or Vivaldi, enter in 'chromium' below.")
-    browser_selection = input("Select your browser (chromium/edge supported): ").lower()
-    if browser_selection == 'chromium':
-        chromium_selection = input("Enter your browser (chrome/thorium/vivaldi): ").lower()
-        base_path = f"C:/Users/{user}/AppData/Local"
-        if chromium_selection == 'chrome':
-            base_path += "/Google Chrome/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg"
-        elif chromium_selection == 'thorium':
-            base_path += "/Thorium/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg"
-        elif chromium_selection == 'vivaldi':
-            base_path += "/Vivaldi/User Data/Default/Extensions/bkdgflcldnnnapblkhphbgpggdiikppg"
-        else:
-            print("ERROR: Invalid chromium selection.")
-            return
-    elif browser_selection == 'edge':
-        base_path = f"C:/Users/{user}/AppData/Local/Microsoft Edge/User Data/Default/Extensions/caoacbimdbbljakfhgikoodekdnlcgpk"
-    else:
-        print("ERROR: Invalid browser selection.")
-        return
-
+def load_manifest(manifest_path):
     try:
-        subfolder = os.listdir(base_path)[0]
-        manifest_path = os.path.join(base_path, subfolder, 'manifest.json')
-    except (FileNotFoundError, IndexError) as e:
-        print("ERROR: Subfolder not found or no subfolder exists.\n")
-        print(e)
-        return
+        with open(manifest_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logging.error("Manifest file not found")
+        return None
+    except json.JSONDecodeError as e:
+        logging.error(f"Error decoding JSON: {e}")
+        return None
 
-    if not os.path.exists(manifest_path):
-        print("ERROR: Manifest file not found")
-        return
-    
-    with open(manifest_path, 'r') as f:
-        manifest_data = json.load(f)
-    
+def save_manifest(manifest_path, manifest_data):
+    try:
+        with open(manifest_path, 'w') as f:
+            json.dump(manifest_data, f, indent=4)
+    except IOError as e:
+        logging.error(f"Error writing to file: {e}")
+
+def patch_manifest(manifest_data):
     if "chrome_settings_overrides" in manifest_data:
         if "search_provider" in manifest_data["chrome_settings_overrides"]:
             if not manifest_data["chrome_settings_overrides"]["search_provider"].get("is_default", True):
-                print("ERROR: Patch already applied, you're good to go.")
+                logging.info("Patch already applied, you're good to go.")
             else:
                 manifest_data["chrome_settings_overrides"]["search_provider"]["is_default"] = False
-                print("Manifest patched.")
+                logging.info("Manifest patched.")
         else:
-            print("ERROR: No search provider found in chrome_settings_overrides.")
+            logging.error("No search provider found in chrome_settings_overrides.")
     else:
-        print("ERROR: No chrome_settings_overrides found in manifest.")
-    
-    with open(manifest_path, 'w') as f:
-        json.dump(manifest_data, f, indent=4)
+        logging.error("No chrome_settings_overrides found in manifest.")
+
+def main():
+    manifest_path = "path/to/manifest.json"  # Update this path as needed
+
+    if not os.path.exists(manifest_path):
+        logging.error("Subfolder not found or no subfolder exists.")
+        return
+
+    manifest_data = load_manifest(manifest_path)
+    if manifest_data is None:
+        return
+
+    patch_manifest(manifest_data)
+    save_manifest(manifest_path, manifest_data)
 
 if __name__ == "__main__":
     main()
