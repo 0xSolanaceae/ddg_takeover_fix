@@ -34,12 +34,12 @@ def patch_manifest(manifest_data):
             logging.error("No search provider found in chrome_settings_overrides.")
     else:
         logging.error("No chrome_settings_overrides found in manifest.")
-
+        
 def main():
-    manifest_path = "path/to/manifest.json"  # Update this path as needed
+    manifest_path = input("Please enter the path to DDG's manifest.json file: ")
 
     if not os.path.exists(manifest_path):
-        logging.error("Subfolder not found or no subfolder exists.")
+        logging.error("Manifest file not found at the provided path.")
         return
 
     manifest_data = load_manifest(manifest_path)
